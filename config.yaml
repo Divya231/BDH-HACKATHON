@@ -1,0 +1,118 @@
+# Kharagpur Data Science Hackathon - Track B Configuration
+# BDH-Driven Continuous Narrative Reasoning
+
+project:
+  name: "KDSH_Track_B"
+  team_name: "Hackathon-nikita"
+  track: "B"
+
+paths:
+  data_dir: "./data"
+  raw_data: "./data/raw"
+  processed_data: "./data/processed"
+  models_dir: "./models"
+  results_dir: "./results"
+  logs_dir: "./logs"
+  cache_dir: "./cache"
+
+data:
+  # Dataset configuration
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  max_novel_length: 120000  # Max words to process
+  chunk_size: 512  # Tokens per chunk
+  chunk_overlap: 128
+  random_seed: 42
+
+bdh:
+  # Baby Dragon Hatchling model configuration (CPU-optimized)
+  model_name: "bdh-small"
+  vocab_size: 50257
+  hidden_dim: 384  # Reduced for CPU
+  num_layers: 6    # Reduced for CPU
+  num_heads: 6     # Reduced for CPU
+  ff_dim: 1536     # Reduced for CPU
+  max_seq_length: 1024  # Reduced for CPU
+  dropout: 0.1
+  
+  # BDH-specific parameters
+  state_dim: 384   # Persistent state dimension (reduced)
+  memory_size: 256 # Memory tokens (reduced)
+  sparsity_threshold: 0.1  # Attention sparsity
+  update_mechanism: "selective"  # selective, full, sparse
+  
+  # Pretrained checkpoint (optional)
+  pretrained_path: null
+  use_pretrained: false
+
+pathway:
+  # Pathway framework configuration
+  use_vector_store: true
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  vector_dim: 384
+  index_type: "flat"  # flat, hnsw, ivf
+  similarity_metric: "cosine"
+  top_k_retrieval: 10
+
+training:
+  # Training hyperparameters
+  num_epochs: 5  # Increased for real competition data
+  batch_size: 2  # Reduced for CPU
+  learning_rate: 2e-5
+  warmup_steps: 100  # Reduced
+  weight_decay: 0.01
+  gradient_accumulation_steps: 2  # Reduced
+  max_grad_norm: 1.0
+  
+  # Optimizer
+  optimizer: "adamw"
+  scheduler: "linear"
+  
+  # Loss configuration
+  loss_function: "cross_entropy"
+  class_weights: [1.0, 1.0]  # [inconsistent, consistent]
+  
+  # Early stopping
+  patience: 3
+  min_delta: 0.001
+  
+  # Checkpointing
+  save_every: 1
+  keep_best_only: true
+
+inference:
+  # Inference configuration
+  batch_size: 1
+  use_cache: true
+  generate_rationale: false  # Optional for Track B
+  confidence_threshold: 0.5
+  
+  # Evidence extraction (optional)
+  extract_evidence: false
+  num_evidence_passages: 5
+  min_evidence_length: 50
+
+model:
+  # Classification head
+  classifier_type: "bdh_pooled"  # bdh_pooled, bdh_sequential, hybrid
+  pooling_strategy: "mean"  # mean, max, attention, cls
+  hidden_layers: [512, 256]
+  activation: "relu"
+  num_classes: 2
+
+logging:
+  # Logging configuration
+  level: "INFO"
+  use_wandb: false
+  wandb_project: "kdsh-track-b"
+  wandb_entity: null
+  log_every: 10
+
+computation:
+  # Computational resources
+  device: "cpu"  # cuda, cpu, mps (changed to cpu for Mac)
+  num_workers: 0  # Set to 0 to avoid multiprocessing issues
+  pin_memory: false  # Set to false for CPU
+  mixed_precision: false  # Not supported on CPU
+  distributed: false
